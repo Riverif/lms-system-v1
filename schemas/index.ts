@@ -1,5 +1,11 @@
 import * as z from "zod";
 
+export const CourseSchema = z.object({
+  title: z.string().min(1, {
+    message: "Title is required",
+  }),
+});
+
 export const LoginSchema = z.object({
   email: z.string().email({
     message: "Email is required",
