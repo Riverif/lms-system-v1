@@ -19,10 +19,11 @@ import { Input } from "@/components/ui/input";
 import { CourseSchema } from "@/schemas";
 import { useTransition } from "react";
 import Link from "next/link";
-import { course } from "@/actions/teacher/course";
+import { createCourse } from "@/actions/teacher/course";
 import toast from "react-hot-toast";
 
 const CreatePage = () => {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<z.infer<typeof CourseSchema>>({
@@ -36,9 +37,10 @@ const CreatePage = () => {
 
   const onSubmit = (values: z.infer<typeof CourseSchema>) => {
     startTransition(() => {
-      course(values).then((data) => {
+      createCourse(values).then((data) => {
         if (data.success) toast.success(data.success);
         if (data.error) toast.error(data.error);
+        if (data.id) router.push(`/teacher/courses/${data.id}`);
       });
     });
   };
