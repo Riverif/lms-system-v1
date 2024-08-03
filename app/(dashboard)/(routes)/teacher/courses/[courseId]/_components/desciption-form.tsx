@@ -18,7 +18,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { CourseDescriptionSchema } from "@/schemas";
+import { CourseSchema } from "@/schemas";
 import { Textarea } from "@/components/ui/textarea";
 
 import { updateCourseDescription } from "@/actions/teacher/course";
@@ -42,8 +42,8 @@ export const DescriptionForm = ({
 
   const toggleEdit = () => setIsEditing((currrent) => !currrent);
 
-  const form = useForm<z.infer<typeof CourseDescriptionSchema>>({
-    resolver: zodResolver(CourseDescriptionSchema),
+  const form = useForm<z.infer<typeof CourseSchema.courseDescription>>({
+    resolver: zodResolver(CourseSchema.courseDescription),
     defaultValues: {
       description: initialData.description || "",
     },
@@ -51,7 +51,9 @@ export const DescriptionForm = ({
 
   const { isValid } = form.formState;
 
-  const onSubmit = async (values: z.infer<typeof CourseDescriptionSchema>) => {
+  const onSubmit = async (
+    values: z.infer<typeof CourseSchema.courseDescription>,
+  ) => {
     startTransition(() => {
       updateCourseDescription(values, courseId).then((data) => {
         if (data.error) toast.error(data.error);

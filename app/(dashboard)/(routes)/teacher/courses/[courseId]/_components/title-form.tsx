@@ -38,14 +38,14 @@ export const TitleForm = ({ initialData, courseId }: TitleFormProps) => {
 
   const toggleEdit = () => setIsEditing((currrent) => !currrent);
 
-  const form = useForm<z.infer<typeof CourseSchema>>({
-    resolver: zodResolver(CourseSchema),
+  const form = useForm<z.infer<typeof CourseSchema.courseTitle>>({
+    resolver: zodResolver(CourseSchema.courseTitle),
     defaultValues: initialData,
   });
 
   const { isValid } = form.formState;
 
-  const onSubmit = async (values: z.infer<typeof CourseSchema>) => {
+  const onSubmit = async (values: z.infer<typeof CourseSchema.courseTitle>) => {
     startTransition(() => {
       updateCourseTitle(values, courseId).then((data) => {
         if (data.error) toast.error(data.error);

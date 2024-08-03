@@ -1,18 +1,52 @@
 "use server";
 
 import * as z from "zod";
-import { CourseDescriptionSchema, CourseSchema } from "@/schemas";
+import { CourseSchema } from "@/schemas";
 import { currentUser } from "@/lib/auth";
 import { getUserById } from "@/data/user";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
-export const updateCourseDescription = async (
-  values: z.infer<typeof CourseDescriptionSchema>,
+export const updateCourseImage = async (
+  values: z.infer<typeof CourseSchema.courseImage>,
   courseId: string,
 ) => {
   try {
-    const validateFields = CourseDescriptionSchema.safeParse(values);
+    const validateFields = CourseSchema.courseImage.safeParse(values);
+
+    if (!validateFields.success) {
+      return { error: "Something went wrong!" };
+    }
+
+    const user = await currentUser();
+    if (!user?.id) return { error: "Unauthorized" };
+
+    const dbUser = await getUserById(user.id);
+    if (!dbUser) return { error: "Unauthorized" };
+
+    await db.course.update({
+      where: {
+        id: courseId,
+        userId: dbUser.id,
+      },
+      data: {
+        ...validateFields.data,
+      },
+    });
+    revalidatePath("/teacher/course/[courseId]", "page");
+
+    return { success: "Image updated!" };
+  } catch {
+    return { error: "Something went wrong!" };
+  }
+};
+
+export const updateCourseDescription = async (
+  values: z.infer<typeof CourseSchema.courseDescription>,
+  courseId: string,
+) => {
+  try {
+    const validateFields = CourseSchema.courseDescription.safeParse(values);
 
     if (!validateFields.success) {
       return { error: "Something went wrong!" };
@@ -42,11 +76,11 @@ export const updateCourseDescription = async (
 };
 
 export const updateCourseTitle = async (
-  values: z.infer<typeof CourseSchema>,
+  values: z.infer<typeof CourseSchema.courseTitle>,
   courseId: string,
 ) => {
   try {
-    const validateFields = CourseSchema.safeParse(values);
+    const validateFields = CourseSchema.courseTitle.safeParse(values);
 
     if (!validateFields.success) {
       return { error: "Something went wrong!" };
@@ -75,8 +109,10 @@ export const updateCourseTitle = async (
   }
 };
 
-export const createCourse = async (values: z.infer<typeof CourseSchema>) => {
-  const validateFields = CourseSchema.safeParse(values);
+export const createCourse = async (
+  values: z.infer<typeof CourseSchema.courseTitle>,
+) => {
+  const validateFields = CourseSchema.courseTitle.safeParse(values);
 
   if (!validateFields.success) {
     return { error: "Something went wrong!" };

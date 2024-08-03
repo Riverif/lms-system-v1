@@ -26,8 +26,8 @@ const CreatePage = () => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const form = useForm<z.infer<typeof CourseSchema>>({
-    resolver: zodResolver(CourseSchema),
+  const form = useForm<z.infer<typeof CourseSchema.courseTitle>>({
+    resolver: zodResolver(CourseSchema.courseTitle),
     defaultValues: {
       title: "",
     },
@@ -35,7 +35,7 @@ const CreatePage = () => {
 
   const { isValid } = form.formState;
 
-  const onSubmit = (values: z.infer<typeof CourseSchema>) => {
+  const onSubmit = (values: z.infer<typeof CourseSchema.courseTitle>) => {
     startTransition(() => {
       createCourse(values).then((data) => {
         if (data.success) toast.success(data.success);

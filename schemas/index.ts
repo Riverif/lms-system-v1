@@ -1,16 +1,22 @@
 import * as z from "zod";
 
-export const CourseDescriptionSchema = z.object({
-  description: z.string().min(1, {
-    message: "Title is required",
+export const CourseSchema = {
+  courseTitle: z.object({
+    title: z.string().min(1, {
+      message: "Title is required",
+    }),
   }),
-});
-
-export const CourseSchema = z.object({
-  title: z.string().min(1, {
-    message: "Title is required",
+  courseDescription: z.object({
+    description: z.string().min(1, {
+      message: "Title is required",
+    }),
   }),
-});
+  courseImage: z.object({
+    imageUrl: z.string().min(1, {
+      message: "Title is required",
+    }),
+  }),
+};
 
 export const LoginSchema = z.object({
   email: z.string().email({

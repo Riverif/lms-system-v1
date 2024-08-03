@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import {
   DEFAULT_LOGIN_REDIRECT,
   apiAuthPrefix,
+  apiUTPrefix,
   authRoutes,
   publicRoutes,
 } from "./routes";
@@ -12,10 +13,14 @@ export default auth((req) => {
   const isLoggedIn = !!req.auth;
 
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
+  const isApiUTRoute = nextUrl.pathname.startsWith(apiUTPrefix);
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
 
   if (isApiAuthRoute) {
+    return undefined;
+  }
+  if (isApiUTRoute) {
     return undefined;
   }
 
