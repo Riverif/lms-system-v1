@@ -19,6 +19,9 @@ export const CourseSchema = {
   courseCategory: z.object({
     categoryId: z.string().min(1),
   }),
+  coursePrice: z.object({
+    price: z.coerce.number(),
+  }),
 };
 
 export const LoginSchema = z.object({

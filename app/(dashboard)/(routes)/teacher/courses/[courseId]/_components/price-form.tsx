@@ -25,37 +25,33 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 import { CourseSchema } from "@/schemas";
-import { updateCourseDescription } from "@/actions/teacher/course";
+import { updateCoursePrice } from "@/actions/teacher/course";
+import { Input } from "@/components/ui/input";
+import { formatPrice } from "@/lib/format";
 
-interface DescriptionFormProps {
+interface PriceFormProps {
   initialData: Course;
   courseId: string;
 }
 
-export const DescriptionForm = ({
-  initialData,
-  courseId,
-}: DescriptionFormProps) => {
+export const PriceForm = ({ initialData, courseId }: PriceFormProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const router = useRouter();
 
   const toggleEdit = () => setIsEditing((currrent) => !currrent);
 
-  const form = useForm<z.infer<typeof CourseSchema.courseDescription>>({
-    resolver: zodResolver(CourseSchema.courseDescription),
+  const form = useForm<z.infer<typeof CourseSchema.coursePrice>>({
+    resolver: zodResolver(CourseSchema.coursePrice),
     defaultValues: {
-      description: initialData.description || "",
+      price: initialData.price || undefined,
     },
   });
 
   const { isValid } = form.formState;
 
-  const onSubmit = async (
-    values: z.infer<typeof CourseSchema.courseDescription>,
-  ) => {
+  const onSubmit = async (values: z.infer<typeof CourseSchema.coursePrice>) => {
     startTransition(() => {
-      updateCourseDescription(values, courseId).then((data) => {
+      updateCoursePrice(values, courseId).then((data) => {
         if (data.error) toast.error(data.error);
         if (data.success) {
           toast.success(data.success);
@@ -68,14 +64,14 @@ export const DescriptionForm = ({
   return (
     <div className="mt-6 rounded-md border bg-slate-100 p-4">
       <div className="flex items-center justify-between font-medium">
-        Course description
+        Course price
         <Button onClick={toggleEdit} variant="ghost">
           {isEditing ? (
             <>Cancel</>
           ) : (
             <>
               <Pencil className="mr-2 h-4 w-4" />
-              Edit description
+              Edit price
             </>
           )}
         </Button>
@@ -84,10 +80,10 @@ export const DescriptionForm = ({
         <p
           className={cn(
             "mt-2 text-sm",
-            !initialData.description && "italic text-slate-500",
+            !initialData.price && "italic text-slate-500",
           )}
         >
-          {initialData.description || "No Description"}
+          {initialData.price ? formatPrice(initialData.price) : "No Price"}
         </p>
       )}
       {isEditing && (
@@ -98,14 +94,16 @@ export const DescriptionForm = ({
           >
             <FormField
               control={form.control}
-              name="description"
+              name="price"
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Textarea
+                    <Input
                       {...field}
                       disabled={isPending}
-                      placeholder="e.g. 'This course is about...'"
+                      type="number"
+                      step="1000"
+                      placeholder="Set a price to your course"
                     />
                   </FormControl>
                   <FormMessage />
