@@ -7,6 +7,40 @@ import { getUserById } from "@/data/user";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
+export const updateCourseCategory = async (
+  values: z.infer<typeof CourseSchema.courseCategory>,
+  courseId: string,
+) => {
+  try {
+    const validateFields = CourseSchema.courseCategory.safeParse(values);
+
+    if (!validateFields.success) {
+      return { error: "Something went wrong!" };
+    }
+
+    const user = await currentUser();
+    if (!user?.id) return { error: "Unauthorized" };
+
+    const dbUser = await getUserById(user.id);
+    if (!dbUser) return { error: "Unauthorized" };
+
+    await db.course.update({
+      where: {
+        id: courseId,
+        userId: dbUser.id,
+      },
+      data: {
+        ...validateFields.data,
+      },
+    });
+    revalidatePath("/teacher/course/[courseId]", "page");
+
+    return { success: "Category updated!" };
+  } catch {
+    return { error: "Something went wrong!" };
+  }
+};
+
 export const updateCourseImage = async (
   values: z.infer<typeof CourseSchema.courseImage>,
   courseId: string,

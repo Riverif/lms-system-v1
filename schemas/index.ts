@@ -16,6 +16,9 @@ export const CourseSchema = {
       message: "Title is required",
     }),
   }),
+  courseCategory: z.object({
+    categoryId: z.string().min(1),
+  }),
 };
 
 export const LoginSchema = z.object({
