@@ -8,6 +8,50 @@ import { getUserById } from "@/data/user";
 import { revalidatePath } from "next/cache";
 import { Chapter } from "@prisma/client";
 
+export const updateChapterDescription = async (
+  values: z.infer<typeof ChapterSchema.chapterDescription>,
+  courseId: string,
+  chapterId: string,
+) => {
+  try {
+    const validateFields = ChapterSchema.chapterDescription.safeParse(values);
+
+    if (!validateFields.success) {
+      return { error: "Something went wrong!" };
+    }
+
+    const user = await currentUser();
+    if (!user?.id) return { error: "Unauthorized" };
+
+    const dbUser = await getUserById(user.id);
+    if (!dbUser) return { error: "Unauthorized" };
+
+    const courseOwner = await db.course.findUnique({
+      where: {
+        id: courseId,
+        userId: dbUser.id,
+      },
+    });
+    if (!courseOwner) return { error: "Unauthorized" };
+
+    await db.chapter.update({
+      where: {
+        id: chapterId,
+        courseId,
+      },
+      data: {
+        ...validateFields.data,
+      },
+    });
+
+    revalidatePath("/teacher/course/[courseId]", "page");
+    return { success: "Chapter created" };
+  } catch (error) {
+    console.log("COURSE_ID_ATTACHMENTS", error);
+    return { error: "Something went wrong!" };
+  }
+};
+
 export const updateChapterTitle = async (
   values: z.infer<typeof ChapterSchema.chapterTitle>,
   courseId: string,
@@ -34,15 +78,13 @@ export const updateChapterTitle = async (
     });
     if (!courseOwner) return { error: "Unauthorized" };
 
-    const { title } = validateFields.data;
-
     await db.chapter.update({
       where: {
         id: chapterId,
         courseId,
       },
       data: {
-        title,
+        ...validateFields.data,
       },
     });
 

@@ -4,6 +4,9 @@ export const ChapterSchema = {
   chapterTitle: z.object({
     title: z.string().min(1),
   }),
+  chapterDescription: z.object({
+    description: z.string().min(1),
+  }),
 };
 
 export const AttachmentSchema = z.object({
