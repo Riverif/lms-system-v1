@@ -7,6 +7,9 @@ export const ChapterSchema = {
   chapterDescription: z.object({
     description: z.string().min(1),
   }),
+  chapterAccess: z.object({
+    isFree: z.boolean().default(false),
+  }),
 };
 
 export const AttachmentSchema = z.object({

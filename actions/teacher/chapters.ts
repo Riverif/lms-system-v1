@@ -8,6 +8,50 @@ import { getUserById } from "@/data/user";
 import { revalidatePath } from "next/cache";
 import { Chapter } from "@prisma/client";
 
+export const updateChapterAccess = async (
+  values: z.infer<typeof ChapterSchema.chapterAccess>,
+  courseId: string,
+  chapterId: string,
+) => {
+  try {
+    const validateFields = ChapterSchema.chapterAccess.safeParse(values);
+
+    if (!validateFields.success) {
+      return { error: "Something went wrong!" };
+    }
+
+    const user = await currentUser();
+    if (!user?.id) return { error: "Unauthorized" };
+
+    const dbUser = await getUserById(user.id);
+    if (!dbUser) return { error: "Unauthorized" };
+
+    const courseOwner = await db.course.findUnique({
+      where: {
+        id: courseId,
+        userId: dbUser.id,
+      },
+    });
+    if (!courseOwner) return { error: "Unauthorized" };
+
+    await db.chapter.update({
+      where: {
+        id: chapterId,
+        courseId,
+      },
+      data: {
+        ...validateFields.data,
+      },
+    });
+
+    revalidatePath("/teacher/course/[courseId]", "page");
+    return { success: "Chapter updated!" };
+  } catch (error) {
+    console.log("COURSE_ID_ATTACHMENTS", error);
+    return { error: "Something went wrong!" };
+  }
+};
+
 export const updateChapterDescription = async (
   values: z.infer<typeof ChapterSchema.chapterDescription>,
   courseId: string,
@@ -45,7 +89,7 @@ export const updateChapterDescription = async (
     });
 
     revalidatePath("/teacher/course/[courseId]", "page");
-    return { success: "Chapter created" };
+    return { success: "Chapter updated!" };
   } catch (error) {
     console.log("COURSE_ID_ATTACHMENTS", error);
     return { error: "Something went wrong!" };
@@ -89,7 +133,7 @@ export const updateChapterTitle = async (
     });
 
     revalidatePath("/teacher/course/[courseId]", "page");
-    return { success: "Chapter created" };
+    return { success: "Chapter updated!" };
   } catch (error) {
     console.log("COURSE_ID_ATTACHMENTS", error);
     return { error: "Something went wrong!" };
