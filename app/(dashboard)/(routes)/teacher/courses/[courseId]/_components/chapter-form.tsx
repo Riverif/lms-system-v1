@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { Chapter, Course } from "@prisma/client";
 import { cn } from "@/lib/utils";
 
-import { Pencil, PlusCircle } from "lucide-react";
+import { Loader2, Pencil, PlusCircle } from "lucide-react";
 
 import {
   Form,
@@ -25,7 +25,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 import { ChapterSchema } from "@/schemas";
-import { createChapter } from "@/actions/teacher/chapters";
+import { createChapter, reorderChapter } from "@/actions/teacher/chapters";
+import { ChapterList } from "./chapter-list";
 
 interface ChapterFormProps {
   initialData: Course & { chapters: Chapter[] };
@@ -50,7 +51,7 @@ export const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
 
   const { isValid } = form.formState;
 
-  const onSubmit = async (values: z.infer<typeof ChapterSchema>) => {
+  const onSubmit = (values: z.infer<typeof ChapterSchema>) => {
     startTransition(() => {
       createChapter(values, courseId).then((data) => {
         if (data.error) toast.error(data.error);
@@ -62,8 +63,29 @@ export const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
     });
   };
 
+  const onReorder = (updateData: { id: string; position: number }[]) => {
+    try {
+      setIsUpdating(true);
+      reorderChapter(updateData, courseId);
+      toast.success("Chapters reordered");
+    } catch {
+      toast.error("Something went wrong");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const onEdit = (id: string) => {
+    router.push(`/teacher/courses/${courseId}/chapters/${id}`);
+  };
+
   return (
-    <div className="mt-6 rounded-md border bg-slate-100 p-4">
+    <div className="relative mt-6 rounded-md border bg-slate-100 p-4">
+      {isUpdating && (
+        <div className="rounded-m absolute right-0 top-0 flex h-full w-full items-center justify-center bg-slate-500/20">
+          <Loader2 className="h-6 w-6 animate-spin text-sky-700" />
+        </div>
+      )}
       <div className="flex items-center justify-between font-medium">
         Course chapters
         <Button onClick={toggleCreating} variant="ghost">
@@ -113,7 +135,11 @@ export const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
           )}
         >
           {!initialData.chapters.length && "No chapters"}
-          {/* TODO: Add a list of chapters */}
+          <ChapterList
+            onEdit={onEdit}
+            onReorder={onReorder}
+            items={initialData.chapters || []}
+          />
         </div>
       )}
       {!isCreating && (
