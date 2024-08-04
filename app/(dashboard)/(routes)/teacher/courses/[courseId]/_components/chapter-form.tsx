@@ -42,8 +42,8 @@ export const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
 
   const toggleCreating = () => setIsCreating((currrent) => !currrent);
 
-  const form = useForm<z.infer<typeof ChapterSchema>>({
-    resolver: zodResolver(ChapterSchema),
+  const form = useForm<z.infer<typeof ChapterSchema.chapterTitle>>({
+    resolver: zodResolver(ChapterSchema.chapterTitle),
     defaultValues: {
       title: "",
     },
@@ -51,7 +51,7 @@ export const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
 
   const { isValid } = form.formState;
 
-  const onSubmit = (values: z.infer<typeof ChapterSchema>) => {
+  const onSubmit = (values: z.infer<typeof ChapterSchema.chapterTitle>) => {
     startTransition(() => {
       createChapter(values, courseId).then((data) => {
         if (data.error) toast.error(data.error);
