@@ -16,6 +16,7 @@ import { getCategories } from "@/data/category";
 import { CategoryForm } from "./_components/category-form";
 import { PriceForm } from "./_components/price-form";
 import { AttachmentForm } from "./_components/attachment-form";
+import { ChapterForm } from "./_components/chapter-form";
 
 const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
   const user = await currentUser();
@@ -37,6 +38,7 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
     course.imageUrl,
     course.price,
     course.categoryId,
+    course.chapters.some((chapter) => chapter.isPublished),
   ];
 
   const totalFields = requireFields.length;
@@ -77,7 +79,9 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
               <IconBadge icon={ListCheck} />
               <h2 className="text-xl">Course chapters</h2>
             </div>
-            <div>TODO: Chapters</div>
+            <div>
+              <ChapterForm initialData={course} courseId={course.id} />
+            </div>
           </div>
           <div>
             <div className="flex items-center gap-x-2">
