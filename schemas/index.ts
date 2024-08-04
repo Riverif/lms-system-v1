@@ -1,5 +1,9 @@
 import * as z from "zod";
 
+export const AttachmentSchema = z.object({
+  url: z.string().min(1),
+});
+
 export const CourseSchema = {
   courseTitle: z.object({
     title: z.string().min(1, {
