@@ -1,12 +1,93 @@
 "use server";
 
 import * as z from "zod";
-import { db } from "@/lib/db";
-import { ChapterSchema } from "@/schemas";
-import { currentUser } from "@/lib/auth";
-import { getUserById } from "@/data/user";
 import { revalidatePath } from "next/cache";
-import { Chapter } from "@prisma/client";
+import Mux from "@mux/mux-node";
+
+import { db } from "@/lib/db";
+import { currentUser } from "@/lib/auth";
+
+import { ChapterSchema } from "@/schemas";
+import { getUserById } from "@/data/user";
+import { url } from "inspector";
+
+const { video } = new Mux({
+  tokenId: process.env.MUX_TOKEN_ID!,
+  tokenSecret: process.env.MUX_TOKEN_SECRET!,
+});
+
+export const updateChapterVideo = async (
+  values: z.infer<typeof ChapterSchema.chapterVideo>,
+  courseId: string,
+  chapterId: string,
+) => {
+  try {
+    const validateFields = ChapterSchema.chapterVideo.safeParse(values);
+
+    if (!validateFields.success) {
+      return { error: "Something went wrong!" };
+    }
+
+    const user = await currentUser();
+    if (!user?.id) return { error: "Unauthorized" };
+
+    const dbUser = await getUserById(user.id);
+    if (!dbUser) return { error: "Unauthorized" };
+
+    const courseOwner = await db.course.findUnique({
+      where: {
+        id: courseId,
+        userId: dbUser.id,
+      },
+    });
+    if (!courseOwner) return { error: "Unauthorized" };
+
+    await db.chapter.update({
+      where: {
+        id: chapterId,
+        courseId,
+      },
+      data: {
+        ...validateFields.data,
+      },
+    });
+
+    const existingMuxData = await db.muxData.findFirst({
+      where: {
+        chapterId,
+      },
+    });
+
+    if (existingMuxData) {
+      await video.assets.delete(existingMuxData.assetId);
+      await db.muxData.delete({
+        where: {
+          id: existingMuxData.id,
+        },
+      });
+    }
+
+    const asset = await video.assets.create({
+      input: [{ url: validateFields.data.videoUrl }],
+      playback_policy: ["public"],
+      test: false,
+    });
+
+    await db.muxData.create({
+      data: {
+        chapterId,
+        assetId: asset.id,
+        playbackId: asset.playback_ids?.[0]?.id,
+      },
+    });
+
+    revalidatePath("/teacher/course/[courseId]", "page");
+    return { success: "Chapter video updated!" };
+  } catch (error) {
+    console.log("COURSE_ID_ATTACHMENTS", error);
+    return { error: "Something went wrong!" };
+  }
+};
 
 export const updateChapterAccess = async (
   values: z.infer<typeof ChapterSchema.chapterAccess>,

@@ -10,6 +10,9 @@ export const ChapterSchema = {
   chapterAccess: z.object({
     isFree: z.boolean().default(false),
   }),
+  chapterVideo: z.object({
+    videoUrl: z.string().min(1),
+  }),
 };
 
 export const AttachmentSchema = z.object({
