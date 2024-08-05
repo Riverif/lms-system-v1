@@ -10,11 +10,175 @@ import { currentUser } from "@/lib/auth";
 import { ChapterSchema } from "@/schemas";
 import { getUserById } from "@/data/user";
 import { url } from "inspector";
+import { error } from "console";
 
 const { video } = new Mux({
   tokenId: process.env.MUX_TOKEN_ID!,
   tokenSecret: process.env.MUX_TOKEN_SECRET!,
 });
+
+export const updateChapterPublish = async (
+  courseId: string,
+  chapterId: string,
+) => {
+  try {
+    const user = await currentUser();
+    if (!user?.id) return { error: "Unauthorized" };
+
+    const dbUser = await getUserById(user.id);
+    if (!dbUser) return { error: "Unauthorized" };
+
+    const courseOwner = await db.course.findUnique({
+      where: {
+        id: courseId,
+        userId: dbUser.id,
+      },
+    });
+    if (!courseOwner) return { error: "Unauthorized" };
+
+    const dbChapter = await db.chapter.findUnique({
+      where: {
+        id: chapterId,
+        courseId,
+      },
+    });
+
+    const dbMuxData = await db.muxData.findUnique({
+      where: {
+        chapterId,
+      },
+    });
+
+    if (
+      !dbChapter ||
+      !dbMuxData ||
+      !dbChapter.title ||
+      !dbChapter.description ||
+      !dbChapter.videoUrl
+    ) {
+      return { error: "Missing required fields!" };
+    }
+
+    if (dbChapter.isPublished) {
+      await db.chapter.update({
+        where: {
+          id: chapterId,
+        },
+        data: {
+          isPublished: false,
+        },
+      });
+
+      const publishedChaptersInCourse = await db.chapter.findMany({
+        where: {
+          courseId,
+          isPublished: true,
+        },
+      });
+
+      if (!publishedChaptersInCourse.length) {
+        await db.course.update({
+          where: {
+            id: courseId,
+          },
+          data: {
+            isPublished: false,
+          },
+        });
+      }
+    } else {
+      await db.chapter.update({
+        where: {
+          id: chapterId,
+        },
+        data: {
+          isPublished: true,
+        },
+      });
+    }
+
+    revalidatePath("/teacher/course/[courseId]/chapters/[chapterId]", "page");
+    return { success: "Chapter updated!" };
+  } catch (error) {
+    console.log("COURSE_ID_ATTACHMENTS", error);
+    return { error: "Something went wrong!" };
+  }
+};
+export const deleteChapter = async (courseId: string, chapterId: string) => {
+  try {
+    const user = await currentUser();
+    if (!user?.id) return { error: "Unauthorized" };
+
+    const dbUser = await getUserById(user.id);
+    if (!dbUser) return { error: "Unauthorized" };
+
+    const courseOwner = await db.course.findUnique({
+      where: {
+        id: courseId,
+        userId: dbUser.id,
+      },
+    });
+    if (!courseOwner) return { error: "Unauthorized" };
+
+    const dbChapter = await db.chapter.findUnique({
+      where: {
+        id: chapterId,
+        courseId,
+      },
+    });
+
+    if (!dbChapter) {
+      return { error: "Chapter not found!" };
+    }
+
+    if (dbChapter.videoUrl) {
+      const existingMuxData = await db.muxData.findFirst({
+        where: {
+          chapterId,
+        },
+      });
+
+      if (existingMuxData) {
+        await video.assets.delete(existingMuxData.assetId);
+        await db.muxData.delete({
+          where: {
+            id: existingMuxData.id,
+          },
+        });
+      }
+    }
+
+    await db.chapter.delete({
+      where: {
+        id: chapterId,
+      },
+    });
+
+    const publishedChaptersInCourse = await db.chapter.findMany({
+      where: {
+        courseId,
+        isPublished: true,
+      },
+    });
+
+    if (!publishedChaptersInCourse.length) {
+      await db.course.update({
+        where: {
+          id: courseId,
+        },
+        data: {
+          isPublished: false,
+        },
+      });
+    }
+
+    revalidatePath("/teacher/course/[courseId]/chapters/[chapterId]", "page");
+    return { success: "Chapter deleted!" };
+  } catch (error) {
+    console.log("COURSE_ID_ATTACHMENTS", error);
+    return { error: "Something went wrong!" };
+  }
+};
 
 export const updateChapterVideo = async (
   values: z.infer<typeof ChapterSchema.chapterVideo>,
@@ -81,7 +245,7 @@ export const updateChapterVideo = async (
       },
     });
 
-    revalidatePath("/teacher/course/[courseId]", "page");
+    revalidatePath("/teacher/course/[courseId]/chapters/[chapterId]", "page");
     return { success: "Chapter video updated!" };
   } catch (error) {
     console.log("COURSE_ID_ATTACHMENTS", error);
@@ -125,7 +289,7 @@ export const updateChapterAccess = async (
       },
     });
 
-    revalidatePath("/teacher/course/[courseId]", "page");
+    revalidatePath("/teacher/course/[courseId]/chapters/[chapterId]", "page");
     return { success: "Chapter updated!" };
   } catch (error) {
     console.log("COURSE_ID_ATTACHMENTS", error);
@@ -169,7 +333,7 @@ export const updateChapterDescription = async (
       },
     });
 
-    revalidatePath("/teacher/course/[courseId]", "page");
+    revalidatePath("/teacher/course/[courseId]/chapters/[chapterId]", "page");
     return { success: "Chapter updated!" };
   } catch (error) {
     console.log("COURSE_ID_ATTACHMENTS", error);
@@ -213,7 +377,7 @@ export const updateChapterTitle = async (
       },
     });
 
-    revalidatePath("/teacher/course/[courseId]", "page");
+    revalidatePath("/teacher/course/[courseId]/chapters/[chapterId]", "page");
     return { success: "Chapter updated!" };
   } catch (error) {
     console.log("COURSE_ID_ATTACHMENTS", error);
@@ -247,7 +411,7 @@ export const reorderChapter = async (
       });
     }
 
-    revalidatePath("/teacher/course/[courseId]", "page");
+    revalidatePath("/teacher/course/[courseId]/chapters/[chapterId]", "page");
     return { success: "Chapter reordered" };
   } catch (error) {
     console.log("COURSE_ID_ATTACHMENTS", error);
@@ -301,7 +465,7 @@ export const createChapter = async (
       },
     });
 
-    revalidatePath("/teacher/course/[courseId]", "page");
+    revalidatePath("/teacher/course/[courseId]/chapters/[chapterId]", "page");
     return { success: "Chapter created", id: chapter.id };
   } catch (error) {
     console.log("COURSE_ID_ATTACHMENTS", error);
