@@ -11,10 +11,9 @@ import { SearchInput } from "./search-input";
 
 export const NavbarRoutes = () => {
   const pathname = usePathname();
-  const router = useRouter();
 
   const isTeacherPage = pathname?.startsWith("/teacher");
-  const isPlayerPage = pathname?.includes("/chapter");
+  const isPlayerPage = pathname?.includes("/courses");
   const isSearchPage = pathname === "/search";
 
   return (
@@ -24,7 +23,7 @@ export const NavbarRoutes = () => {
           <SearchInput />
         </div>
       )}
-      <div className="ml-auto flex gap-x-2">
+      <div className="ml-auto flex items-center gap-x-2">
         {isTeacherPage || isPlayerPage ? (
           <Link href="/">
             <Button variant="ghost">
