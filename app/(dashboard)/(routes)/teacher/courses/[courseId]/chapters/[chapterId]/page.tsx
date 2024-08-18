@@ -18,12 +18,12 @@ const ChapterIdPage = async ({
 }) => {
   const user = await currentUser();
   if (!user) {
-    return redirect("/");
+    return redirect("/search");
   }
 
   const chapter = await getChapterById(params.chapterId, params.courseId);
   if (!chapter) {
-    return redirect("/");
+    return redirect("/search");
   }
 
   const requireFields = [chapter.title, chapter.description, chapter.videoUrl];

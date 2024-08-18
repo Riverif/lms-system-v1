@@ -38,7 +38,7 @@ const CourseLayout = async ({
     },
   });
 
-  if (!course) return redirect("/");
+  if (!course) return redirect("/search");
 
   const progressCount = await getProgress(user.id, course.id);
 

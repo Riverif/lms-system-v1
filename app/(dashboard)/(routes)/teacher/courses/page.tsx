@@ -12,7 +12,7 @@ const CoursesPage = async () => {
   const user = await currentUser();
 
   if (!user?.id) {
-    return redirect("/");
+    return redirect("/search");
   }
 
   const courses = await getCourses(user.id);

@@ -25,7 +25,7 @@ export const NavbarRoutes = () => {
       )}
       <div className="ml-auto flex items-center gap-x-2">
         {isTeacherPage || isPlayerPage ? (
-          <Link href="/">
+          <Link href="/search">
             <Button variant="ghost">
               <LogOut className="mr-2 h-4 w-4" />
               Exit

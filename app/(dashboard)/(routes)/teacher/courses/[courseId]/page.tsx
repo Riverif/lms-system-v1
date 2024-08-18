@@ -24,14 +24,14 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
   const user = await currentUser();
 
   if (!user) {
-    return redirect("/");
+    return redirect("/search");
   }
 
   const course = await getCourseById(params.courseId);
   const categories = await getCategories();
 
   if (!course) {
-    return redirect("/");
+    return redirect("/search");
   }
 
   const requireFields = [

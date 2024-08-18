@@ -18,7 +18,7 @@ const SearchPage = async ({ searchParams }: SearchPageProps) => {
   const user = await currentUser();
 
   if (!user?.id) {
-    return redirect("/");
+    return redirect("/search");
   }
 
   const categories = await getCategories();

@@ -18,7 +18,7 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
     },
   });
 
-  if (!course) return redirect("/");
+  if (!course) return redirect("/search");
 
   return redirect(`/courses/${course.id}/chapters/${course.chapters[0].id}`);
 };
